@@ -1,12 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Test</title>
+    <title>Client Interaction Dashboard</title>
     <script src="https://unpkg.com/piesocket-js@5"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -18,14 +18,12 @@
             padding: 10px;
             margin: 10px 0;
             border-radius: 5px;
+            background-color: #e2e3e5; /* Gray for default state */
+            color: #6c757d;
         }
         .green {
             background-color: #d4edda;
             color: #155724;
-        }
-        .red {
-            background-color: #f8d7da;
-            color: #721c24;
         }
         .container {
             max-width: 800px;
@@ -51,20 +49,22 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-2xl font-bold mb-4">Client Test Page</h1>
+        <h1 class="text-2xl font-bold mb-4">Client Interaction Dashboard</h1>
 
-        <div class="mb-4">
-            <p class="text-lg">Generated Link: <a id="generatedLink" href="#" target="_blank" class="text-blue-500 underline"></a></p>
+        <div class="mb-6">
+            <p class="text-lg mb-2">Send this link to the client to be ready for the selfie:</p>
+            <p><a id="generatedLink" href="#" target="_blank" class="text-blue-500 underline"></a></p>
             <button onclick="copyLink()" class="mt-2">Copy Link</button>
         </div>
 
         <div id="dashboard" class="mt-6">
-            <h2 class="text-xl font-semibold mb-2">Dashboard</h2>
+            <h2 class="text-xl font-semibold mb-2">Client Status</h2>
             <div id="messageArea" class="mb-4"></div>
-            <div id="clientReady" class="status red">Client Not Ready</div>
+            <div id="clientReady" class="status">Client Not Ready</div>
+            <div id="clientPassed" class="status">Client Passed Selfie</div>
         </div>
 
-        <button onclick="sendSelfieRequest()" class="mt-4">Send Client Selfie Request</button>
+        <button onclick="sendSelfieRequest()" class="mt-4">Request Client Selfie</button>
     </div>
 
     <script>
@@ -88,11 +88,9 @@
                     console.log(data);
 
                     if (data.from === "client" && data.type === "TOPsecret") {
-                        const messageArea = document.getElementById("messageArea");
-                        const message = document.createElement("div");
-                        message.className = "status green";
-                        message.textContent = data.message;
-                        messageArea.appendChild(message);
+                        const clientPassed = document.getElementById("clientPassed");
+                        clientPassed.textContent = `Client Passed Selfie with EventID: ${data.message}`;
+                        clientPassed.className = "status green";
                     } else if (data.from === "client" && data.type === "reminder") {
                         const clientReady = document.getElementById("clientReady");
                         clientReady.textContent = "Client Ready";
@@ -103,15 +101,29 @@
                 window.channel = channel; // Save channel for later use
             } catch (err) {
                 console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Error',
+                    text: 'Unable to initialize chat. Please try again later.'
+                });
             }
         }
 
         function copyLink() {
             const link = document.getElementById("generatedLink").href;
             navigator.clipboard.writeText(link).then(() => {
-                alert("Link copied to clipboard!");
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Link Copied',
+                    text: 'The link has been copied to your clipboard.'
+                });
             }).catch(err => {
                 console.error("Failed to copy link: ", err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Copy Failed',
+                    text: 'Unable to copy the link. Please try again.'
+                });
             });
         }
 
@@ -122,9 +134,17 @@
                     userId: crypto.randomUUID(),
                     transactionId: crypto.randomUUID()
                 });
-                alert("Selfie request sent to the client!");
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Selfie Request Sent',
+                    text: 'The client has been asked to send a selfie.'
+                });
             } else {
-                alert("Channel not initialized yet.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Channel Not Ready',
+                    text: 'The connection has not been established yet. Please wait.'
+                });
             }
         }
 
